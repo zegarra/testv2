@@ -33,25 +33,21 @@
       return unsubscribe();
    },[]);
 
-
-
-
-
    const onDisplayLocalNotification = async () => {
      // Request permissions (required for iOS)
      // await notifee.requestPermission()
      // Create a channel (required for Android)
-    //  const channelId = await notifee.createChannel({
-    //    id: 'default',
-    //    name: 'Default Channel',
-    //  });
+     const channelId = await notifee.createChannel({
+       id: 'default',
+       name: 'Default Channel',
+     });
      // Display a notification
      await notifee.displayNotification({
        title: 'Zegarra test',
        body: 'Soy una notificación usando Notifee 🐱‍🏍',
        
        android: {
-        //  channelId,
+         channelId,
          // smallIcon: 'name-of-a-small-icon', // optional, defaults to 'ic_launcher'.
          // pressAction is needed if you want the notification to open the app when pressed
          pressAction: {

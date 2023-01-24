@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:27950092290:android:653eb55d07354fbe97d71b",
+        "mobilesdk_app_id": "1:27950092290:android:fbe304ee608627e097d71b",
         "android_client_info": {
-          "package_name": "com.notificationtest"
+          "package_name": "com.testpushv3"
         }
       },
       "oauth_client": [
