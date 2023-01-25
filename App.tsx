@@ -8,11 +8,11 @@
  * @format
  */
 
- import React, { useEffect } from 'react';
+ import React, { useState, useEffect } from 'react';
  import notifee from '@notifee/react-native';
- import {  StyleSheet,  Text,  Button, View,} from 'react-native';
+ import {  StyleSheet,  Text,  Button, View, TextInput,} from 'react-native';
  import messaging from '@react-native-firebase/messaging';
-
+ import { SendMessageServerless } from './Consulta';
 
 // //token fcm
  const checkToken = async () => {
@@ -26,6 +26,14 @@
 
  const App = () => {
 
+  const [title, setTitle] = useState('');
+  const [message, setMessage] = useState('');
+  const [remoteMessage, setRemoteMessage] = useState('');
+  const remoteMessageJson = remoteMessage !== '' ? JSON.parse(remoteMessage) : '';
+  const [visible, setVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
    useEffect(()=>{
       const unsubscribe = messaging().onMessage(async remoteMessage =>{
         console.log("Push notification recibida", remoteMessage);
@@ -34,27 +42,61 @@
    },[]);
 
    const onDisplayLocalNotification = async () => {
-     // Request permissions (required for iOS)
-     // await notifee.requestPermission()
-     // Create a channel (required for Android)
      const channelId = await notifee.createChannel({
        id: 'default',
        name: 'Default Channel',
      });
+
+
      // Display a notification
      await notifee.displayNotification({
-       title: 'Zegarra test',
-       body: 'Soy una notificación usando Notifee 🐱‍🏍',
+       title: title,
+       body: message,
        
        android: {
          channelId,
-         // smallIcon: 'name-of-a-small-icon', // optional, defaults to 'ic_launcher'.
-         // pressAction is needed if you want the notification to open the app when pressed
-         pressAction: {
-            id: 'fAxQm7ErTSyJVMRVd-AuqR:APA91bF6sYNT735ASg9HR8JvLYbTZ_hE2Yu8ZCDLGUeuZq90W7xjQqq93Xsewib4tg5vG4nRRe-IbvShq566uH41YskQ_O5bjsE2btsi65fXIQWxZYltJJCsytExPJQPmGpxw_N237IM',
-         },
+        //  pressAction: {
+        //     id: 'fAxQm7ErTSyJVMRVd-AuqR:APA91bF6sYNT735ASg9HR8JvLYbTZ_hE2Yu8ZCDLGUeuZq90W7xjQqq93Xsewib4tg5vG4nRRe-IbvShq566uH41YskQ_O5bjsE2btsi65fXIQWxZYltJJCsytExPJQPmGpxw_N237IM',
+        //  },
        },
      });
+    }
+
+    const requestPermission = async ()=>{
+      const authStatus = await messaging().requestPermission();
+    };
+
+    const SendNotification = async()=>{
+      const channelId = await notifee.createChannel({
+          id: 'ChannelId',
+          name: 'Default ChannelId',
+      });
+      if(remoteMessage !== ''){
+        notifee.displayNotification({
+          title: remoteMessageJson.notification.title,
+          body: remoteMessageJson.notification.body,
+          android:{
+            channelId
+          }
+        }).then(() => setVisible(true))
+      };
+      setRemoteMessage('');
+    };
+
+    useEffect(()=>{requestPermission(); const unsubscribe = messaging() 
+      .onMessage(remoteMessage=>setRemoteMessage(JSON.stringify(remoteMessage)))},[]);
+    useEffect(()=>{SendNotification();},[remoteMessageJson]);
+    
+    const sendLocalNotification =async () => {
+      setLoading(true) ;
+      onDisplayLocalNotification()
+      .then(()=>setLoading(false))
+      .catch(error=>console.log(error))
+      .finally(()=>setVisible(true));
+    };
+    
+    const SendServerlessNotification = async ()=>{
+      SendMessageServerless(title, message);
     }
 
 
@@ -62,9 +104,24 @@
    return (
      <View style={{flex:1, backgroundColor: 'black',alignItems: 'center', justifyContent: 'center'}}>
         <Text style={styles.sectionTitle}>
-                PushNotification
+                PushNotification TestV
               </Text>
-       <Button title="Display Notification" onPress={onDisplayLocalNotification} />
+        <TextInput placeholder='Titulo...' 
+            placeholderTextColor={'#2F0044'} 
+            onChangeText={(title) => setTitle(title)} 
+            style={[stylesHere.inputs, {height: 50}]}/>
+        <TextInput 
+            placeholder='Mensaje...' 
+            placeholderTextColor={'#2F0044'} 
+            onChangeText={(body) => setMessage(body)} 
+            style={[stylesHere.inputs, {height: 50}]}/>
+        <View style={{marginTop:10}}>
+          <Button title="Enviar notificación local"  onPress={sendLocalNotification}/>
+        </View>
+        <View style={{marginTop:10}}>
+          <Button title="Enviar notificación sin servidor"  onPress={SendServerlessNotification}/>
+        </View>
+       
      </View>
    );
  }
@@ -77,4 +134,37 @@
  });
  
  export default App;
+ const stylesHere = StyleSheet.create({
+  container: {
+    flex:1,
+    backgroundColor: '#EA6F00'
+},
+content: {
+    width: '100%',
+    backgroundColor: '#2F0044',
+    height: '100%',
+    alignItems: 'center',
+    borderRadius: 40,
+    borderWidth: 3,
+    borderColor: '#fff',
+    paddingTop: 7
+},
+title: {
+    color: "#fff",
+    paddingTop: 15,
+    fontSize: 25,
+    fontWeight: 'bold'
+},
+inputs: {
+    width: '90%',
+    paddingLeft: 14,
+    marginTop: 20,
+    borderWidth: 3,
+    borderRadius: 10,
+    backgroundColor: '#fff',
+    fontWeight: 'bold',
+    textAlignVertical: 'top',
+    paddingTop: 12
+},
+});
  
